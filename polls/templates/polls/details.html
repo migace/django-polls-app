@@ -1,0 +1,28 @@
+<!-- <div style="margin: 50px;">
+    <h1 style="margin: 0">{{ question.question_text}}</h1>
+    <small>({{ question.pub_date|date:"F j, Y" }})</small>
+    <hr />
+    <ul>
+        {% for choice in question.choice_set.all %}
+            <li>{{ choice.choice_text }} -- {{ choice.votes }} vote{{ choice.votes|pluralize }}</li>
+        {% endfor %}
+    </ul>
+</div> -->
+<div style="margin: 50px;">
+    <form action="{% url 'polls:vote' question.id %}" method="post">
+        {% csrf_token %}
+        <fieldset style="margin-bottom: 24px;">
+            <legend>
+                <h1 style="margin: 0">{{ question.question_text}}</h1>
+                <small>({{ question.pub_date|date:"F j, Y" }})</small>
+            </legend>
+            {% if error_message %}<p><strong>{{ error_message }}</strong></p>{% endif %}
+            {% for choice in question.choice_set.all %}                
+                <input type="radio" name="choice" id="choice{{ forloop.counter }}" value="{{ choice.id }}" />
+                <label for="choice{{ forloop.counter }}">{{ choice.choice_text }}</label>
+                <br />
+            {% endfor %}
+        </fieldset>
+        <input type="submit" value="Vote" />
+    </form>
+</div>
