@@ -16,8 +16,14 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path, include
+from rest_framework import routers
+from trainings.urls import urlpatterns as trainings_urls
 
 urlpatterns = [
     path('polls/', include('polls.urls')),
-    path('admin/', admin.site.urls),    
+    path('admin/', admin.site.urls),
+    path('auth/', include('djoser.urls')),
+    path('auth/', include('djoser.urls.authtoken')),
+    path('auth/', include('djoser.social.urls')),
+    path('trainings/', include(trainings_urls))
 ]

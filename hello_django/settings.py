@@ -15,10 +15,10 @@ import sys
 import dj_database_url
 from pathlib import Path
 from django.core.management.utils import get_random_secret_key
+from decouple import config
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
-
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/4.2/howto/deployment/checklist/
@@ -29,24 +29,31 @@ SECRET_KEY = os.getenv("DJANGO_SECRET_KEY", get_random_secret_key())
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = os.getenv("DEBUG", "False") == "True"
 
-ALLOWED_HOSTS = os.getenv("DJANGO_ALLOWED_HOSTS", "127.0.0.1,localhost").split(",")
+ALLOWED_HOSTS = os.getenv("DJANGO_ALLOWED_HOSTS",
+                          "127.0.0.1,localhost,http://127.0.0.1:5173,http://localhost:5173").split(",")
 
 DEVELOPMENT_MODE = os.getenv("DEVELOPMENT_MODE", "False") == "True"
-
 
 # Application definition
 
 INSTALLED_APPS = [
+    'core.apps.CoreConfig',
     'polls.apps.PollsConfig',
+    'trainings.apps.TrainingsConfig',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'rest_framework',
+    'rest_framework.authtoken',
+    'djoser',
+    'social_django',
 ]
 
 MIDDLEWARE = [
+    'corsheaders.middleware.CorsMiddleware',
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
@@ -54,6 +61,7 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'social_django.middleware.SocialAuthExceptionMiddleware',
 ]
 
 ROOT_URLCONF = 'hello_django.urls'
@@ -75,7 +83,6 @@ TEMPLATES = [
 ]
 
 WSGI_APPLICATION = 'hello_django.wsgi.application'
-
 
 # Database
 # https://docs.djangoproject.com/en/4.2/ref/settings/#databases
@@ -112,7 +119,6 @@ AUTH_PASSWORD_VALIDATORS = [
     },
 ]
 
-
 # Internationalization
 # https://docs.djangoproject.com/en/4.2/topics/i18n/
 
@@ -124,14 +130,55 @@ USE_I18N = True
 
 USE_TZ = True
 
-
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/4.2/howto/static-files/
 
 STATIC_URL = '/static/'
-STATIC_ROOT = os.path.join(BASE_DIR, "staticfiles")
+STATIC_ROOT = os.path.join(BASE_DIR, "static")
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/4.2/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+AUTH_USER_MODEL = "core.User"
+CORS_ALLOWED_ORIGINS = [
+    "http://localhost:5173",
+    "http://127.0.0.1:5173",
+    "http://perfectpt.pl",
+]
+CORS_ORIGIN_WHITELIST = [
+    "http://localhost:5173",
+    "http://127.0.0.1:5173",
+    "http://perfectpt.pl",
+]
+CORS_ALLOW_ALL_ORIGINS = False
+CORS_ALLOW_CREDENTIALS = True
+
+DJOSER = {
+    'LOGIN_FIELD': 'email',
+    'SOCIAL_AUTH_TOKEN_STRATEGY': 'core.strategy.TokenStrategy',
+    'SOCIAL_AUTH_ALLOWED_REDIRECT_URIS': ['http://127.0.0.1:5173', 'http://localhost:5173'],
+}
+
+AUTHENTICATION_BACKENDS = (
+    'social_core.backends.google.GoogleOAuth2',
+    'django.contrib.auth.backends.ModelBackend'
+)
+
+SOCIAL_AUTH_GOOGLE_OAUTH2_KEY = config('GOOGLE_CLIENT_ID')
+SOCIAL_AUTH_GOOGLE_OAUTH2_SECRET = config('GOOGLE_CLIENT_SECRET')
+SOCIAL_AUTH_GOOGLE_OAUTH2_SCOPE = [
+    'https://www.googleapis.com/auth/userinfo.email',
+    'https://www.googleapis.com/auth/userinfo.profile',
+    'openid'
+]
+SOCIAL_AUTH_GOOGLE_OAUTH2_EXTRA_DATA = ['first_name', 'last_name']
+REST_FRAMEWORK = {
+   'DEFAULT_AUTHENTICATION_CLASSES': (
+       'rest_framework.authentication.TokenAuthentication',
+   ),
+   'DEFAULT_PERMISSION_CLASSES': (
+        'rest_framework.permissions.IsAdminUser'
+   ),
+}
